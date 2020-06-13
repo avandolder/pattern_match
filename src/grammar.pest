@@ -30,7 +30,7 @@ RecordPattern = { "{" ~ RecordElements? ~ "}" }
 RecordElements = _{ Field ~ "," ~ RecordElements | Field | Rest }
 Field = { "[" ~ Expr ~ "]" ~ ":" ~ Pattern | Id ~ ":" ~ Pattern | Id }
 
-Rest = { "..." ~ Id? }
+Rest = { ".." ~ Id? }
 
 Range = { Int ~ ".." ~ Int | Char ~ ".." ~ Char }
 Int = @{ ASCII_DIGIT+ }

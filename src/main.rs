@@ -2,18 +2,16 @@
  * # Pattern Match
  *
  * Handle pattern matching for a small Erlang-esque system.
- * Has first-class tuples, records, arrays, ranges, ints, strings, chars, bools,
+ * Has first-class tuples, records, arrays, ints, strings, chars, bools,
  * and symbols (:id atomic strings).
  *
  * ## Syntax Mockup
  *
  * match val with
  *   (x, y) => x + y
- *   [1, 2, ...rest] => rest
+ *   [1, 2, ..rest] => rest
  *   {tag: :pat, val, line: l} => matchPattern(val)
  *   "hello" => "world"
- *   1..10 => :small
- *   'a'..'z' => lower
  *   'A' | 'B' => "AB"
  *   [x, _, z] => x + z
  *   _ => "default"
@@ -26,13 +24,12 @@
  * cases -> pats '=>' expr cases | 'end'
  * pats -> pat '|' pats | pat
  * pat -> '_' | id | int | string | char | bool | symbol | tuple_pat | record_pat | array_pat
- *      | range
  * tuple_pat -> '(' elems
  * array_pat -> '[' array_elems
  * record_pat -> '{' fields
  * elems -> pat ',' elems | pat ')' | ')'
- * array_elems -> pat ',' array_elems | pat ']' | '...' id ']' | '...' ']' | ']'
- * fields -> field ',' fields | field '}' | '...' id '}' | '...' '}'
+ * array_elems -> pat ',' array_elems | pat ']' | '..' id ']' | '..' ']' | ']'
+ * fields -> field ',' fields | field '}' | '..' id '}' | '..' '}'
  * field -> '[' expr ']' ':' pat | id ':' pat | id
  */
 
@@ -69,7 +66,7 @@ enum Pattern<'a> {
     Record(Vec<(&'a str, Pattern<'a>)>, Rest<'a>),
 }
 
-fn parse_field(mut pair: Pair<Rule>) -> (&str, Pattern) {
+fn parse_field(pair: Pair<Rule>) -> (&str, Pattern) {
     let mut pairs = pair.into_inner();
 
     let first = pairs.next().unwrap();
@@ -137,7 +134,7 @@ fn parse_pattern(pair: Pair<Rule>) -> Pattern {
 fn main() {
     let example = r#"match val with
   (x, y) => x
-  [1, 2, ...rest] => rest
+  [1, 2, ..rest] => rest
   {tag: :pat, val, line: l} => val
   "hello" => "world"
   'A' | 'B' => "AB"
@@ -149,7 +146,7 @@ end"#;
         .expect("failed parse")
         .next()
         .unwrap();
-    
+
     for m in program.into_inner() {
         if let Rule::EOI = m.as_rule() {
             break;
@@ -163,7 +160,7 @@ end"#;
             let mut case = case.into_inner();
 
             loop {
-                let mut pair = case.next().unwrap();
+                let pair = case.next().unwrap();
                 match pair.as_rule() {
                     Rule::Pattern => print!("| {:?} ", parse_pattern(pair)),
                     Rule::Expr => {
