@@ -1,0 +1,39 @@
+WHITESPACE = _{ " " | "\t" | NEWLINE }
+COMMENT = _{ "//" ~ (!NEWLINE ~ ANY) ~ NEWLINE }
+
+Program = _{ SOI ~ Match* ~ EOI }
+
+Match = { "match" ~ Expr ~ "with" ~ Case+ ~ "end" }
+
+Case = { Pattern ~ ("|" ~ Pattern)* ~ "=>" ~ Expr }
+
+Pattern = {
+    TuplePattern
+    | RecordPattern
+    | ArrayPattern
+    | Range
+    | Int
+    | String
+    | Char
+    | Bool
+    | Symbol
+    | Id
+    | "_"
+}
+
+TuplePattern = { "(" ~ (Pattern ~ ("," ~ Pattern)*)? ~ ")" }
+
+ArrayPattern = { "[" ~ (Pattern ~ ("," ~ Pattern)* ~ ("," ~ "..." ~ Id?)?)? ~ "]" }
+
+RecordPattern = { "{" ~ (Field ~ ("," ~ Field)* ~ ("..." ~ Id | "...")?)? ~ "}" }
+Field = { "[" ~ Expr ~ "]" ~ ":" ~ Pattern | Id ~ ":" ~ Pattern | Id }
+
+Range = { Int ~ ".." ~ Int | Char ~ ".." ~ Char }
+Int = @{ ASCII_DIGIT+ }
+String = @{ "\"" ~ (!"\"" ~ ANY)* ~ "\"" }
+Char = @{ "'" ~ ("\\'" | !"'" ~ ANY)? ~ "'"}
+Bool = { "true" | "false" }
+Symbol = @{ ":" ~ Id }
+Id = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
+
+Expr = { Range | Int | String | Char | Bool | Symbol | Id }
