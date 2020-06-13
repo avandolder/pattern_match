@@ -1,11 +1,11 @@
 WHITESPACE = _{ " " | "\t" | NEWLINE }
 COMMENT = _{ "//" ~ (!NEWLINE ~ ANY) ~ NEWLINE }
 
-Program = _{ SOI ~ Match* ~ EOI }
+Program = { SOI ~ Match* ~ EOI }
 
 Match = { "match" ~ Expr ~ "with" ~ Case+ ~ "end" }
 
-Case = { Pattern ~ ("|" ~ Pattern)* ~ "=>" ~ Expr }
+Case = { "|"? ~ Pattern ~ ("|" ~ Pattern)* ~ "=>" ~ Expr }
 
 Pattern = {
     TuplePattern
@@ -23,17 +23,21 @@ Pattern = {
 
 TuplePattern = { "(" ~ (Pattern ~ ("," ~ Pattern)*)? ~ ")" }
 
-ArrayPattern = { "[" ~ (Pattern ~ ("," ~ Pattern)* ~ ("," ~ "..." ~ Id?)?)? ~ "]" }
+ArrayPattern = { "[" ~ ArrayElements? ~ "]" }
+ArrayElements = _{ Pattern ~ "," ~ ArrayElements | Pattern | Rest }
 
-RecordPattern = { "{" ~ (Field ~ ("," ~ Field)* ~ ("..." ~ Id | "...")?)? ~ "}" }
+RecordPattern = { "{" ~ RecordElements? ~ "}" }
+RecordElements = _{ Field ~ "," ~ RecordElements | Field | Rest }
 Field = { "[" ~ Expr ~ "]" ~ ":" ~ Pattern | Id ~ ":" ~ Pattern | Id }
+
+Rest = { "..." ~ Id? }
 
 Range = { Int ~ ".." ~ Int | Char ~ ".." ~ Char }
 Int = @{ ASCII_DIGIT+ }
 String = @{ "\"" ~ (!"\"" ~ ANY)* ~ "\"" }
-Char = @{ "'" ~ ("\\'" | !"'" ~ ANY)? ~ "'"}
+Char = @{ "'" ~ ("\\'" | !"'" ~ ANY) ~ "'"}
 Bool = { "true" | "false" }
-Symbol = @{ ":" ~ Id }
+Symbol = ${ ":" ~ Id }
 Id = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
 
 Expr = { Range | Int | String | Char | Bool | Symbol | Id }
