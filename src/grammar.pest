@@ -11,12 +11,7 @@ Pattern = {
     TuplePattern
     | RecordPattern
     | ArrayPattern
-    | Range
-    | Int
-    | String
-    | Char
-    | Bool
-    | Symbol
+    | Atom
     | Id
     | "_"
 }
@@ -32,7 +27,6 @@ Field = { "[" ~ Expr ~ "]" ~ ":" ~ Pattern | Id ~ ":" ~ Pattern | Id }
 
 Rest = { ".." ~ Id? }
 
-Range = { Int ~ ".." ~ Int | Char ~ ".." ~ Char }
 Int = @{ ASCII_DIGIT+ }
 String = @{ "\"" ~ (!"\"" ~ ANY)* ~ "\"" }
 Char = @{ "'" ~ ("\\'" | !"'" ~ ANY) ~ "'"}
@@ -40,4 +34,6 @@ Bool = { "true" | "false" }
 Symbol = ${ ":" ~ Id }
 Id = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
 
-Expr = { Range | Int | String | Char | Bool | Symbol | Id }
+Expr = { Atom | Id }
+
+Atom = { Int | String | Char | Bool | Symbol }

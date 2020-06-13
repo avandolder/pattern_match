@@ -46,6 +46,26 @@ use pest::{
 pub struct PatternParser;
 
 #[derive(Clone, Debug)]
+enum Atom<'a> {
+    Char(&'a str),
+    String(&'a str),
+    Bool(bool),
+    Int(i64),
+    Symbol(&'a str),
+}
+
+fn parse_atom(pair: Pair<Rule>) -> Atom {
+    match pair.as_rule() {
+        Rule::Int => Atom::Int(pair.as_str().parse().unwrap()),
+        Rule::String => Atom::String(pair.as_str()),
+        Rule::Char => Atom::Char(pair.as_str()),
+        Rule::Bool => Atom::Bool(pair.as_str().parse().unwrap()),
+        Rule::Symbol => Atom::Symbol(pair.into_inner().next().unwrap().as_str()),
+        _ => unreachable!(),
+    }
+}
+
+#[derive(Clone, Debug)]
 enum Rest<'a> {
     Named(&'a str),
     Unnamed,
@@ -55,12 +75,8 @@ enum Rest<'a> {
 #[derive(Clone, Debug)]
 enum Pattern<'a> {
     Any,
-    Symbol(&'a str),
-    Int(i64),
-    Char(&'a str),
-    Bool(bool),
+    Atom(Atom<'a>),
     Id(&'a str),
-    String(&'a str),
     Tuple(Vec<Pattern<'a>>),
     Array(Vec<Pattern<'a>>, Rest<'a>),
     Record(Vec<(&'a str, Pattern<'a>)>, Rest<'a>),
@@ -120,12 +136,7 @@ fn parse_pattern(pair: Pair<Rule>) -> Pattern {
             }
             Pattern::Record(fields, rest)
         }
-        // Rule::Range => ,
-        Rule::Int => Pattern::Int(pair.as_str().parse().unwrap()),
-        Rule::String => Pattern::String(pair.as_str()),
-        Rule::Char => Pattern::Char(pair.as_str()),
-        Rule::Bool => Pattern::Bool(pair.as_str().parse().unwrap()),
-        Rule::Symbol => Pattern::Symbol(pair.into_inner().next().unwrap().as_str()),
+        Rule::Atom => Pattern::Atom(parse_atom(pair.into_inner().next().unwrap())),
         Rule::Id => Pattern::Id(pair.as_str()),
         _ => unreachable!(),
     }
@@ -135,7 +146,7 @@ fn main() {
     let example = r#"match val with
   (x, y) => x
   [1, 2, ..rest] => rest
-  {tag: :pat, val, line: l} => val
+  {tag: :pat, val, line: l, ..} => val
   "hello" => "world"
   'A' | 'B' => "AB"
   [_, _, z] => z
